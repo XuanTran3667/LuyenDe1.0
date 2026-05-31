@@ -95,9 +95,26 @@ export default function App() {
     }
   };
       
-      setProfile(updatedProfile);
-      setActiveAttempt(localAttempt);
-      setActiveTab('result');
+     } catch (err: any) {
+      console.error('Failed to save attempt locally:', err);
+      return false;
+    }
+  };
+
+  // Profile updating
+  const handleUpdateProfile = async (updatedData: Partial<UserProfile>) => {
+    try {
+      // Bỏ đoạn fetch('/api/profile') gây lỗi 404/405 đi
+      // Cập nhật thẳng vào giao diện local
+      setProfile(prev => {
+        if (!prev) return prev;
+        const newProfile = { ...prev, ...updatedData };
+        return newProfile;
+      });
+      return true;
+    } catch (err: any) {
+      console.error('Failed to update profile locally', err);
+      return false;
     }
   };
 
