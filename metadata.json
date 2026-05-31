@@ -1,0 +1,6 @@
+{
+  "name": "Luyện Thi THPT QG 2026",
+  "description": "Nền tảng luyện thi chất lượng cao THPT Quốc Gia 2026 với chế độ Focus Mode/Chill Mode, kho nhạc Lo-Fi, và tích hợp AI gợi ý lộ trình học tập, phân tích điểm yếu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
