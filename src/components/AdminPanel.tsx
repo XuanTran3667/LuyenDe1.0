@@ -296,15 +296,9 @@ export default function AdminPanel({ exams, onAddExam, onDeleteExam }: AdminPane
       setOcrProgress('Đang gửi dữ liệu thô chuẩn hóa đến AI Parser (Gemini)...');
       console.log('[AUDIT LOG] Transmitting post payload containing extracted text strings to /api/ai/parse-exam...');
       
-      const response = await fetch('/api/ai/parse-exam', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          questionText: questionRawText,
-          answerText: answersRawText,
-          subject
-        })
-      });
+     // Bỏ qua việc gọi server thật để tránh lỗi 405 trên GitHub Pages
+    // Ép hệ thống tự động nhảy thẳng xuống catch để kích hoạt Chế độ cục bộ (Local Mode)
+    throw new Error('Kích hoạt Chế độ cục bộ trên GitHub Web');
 
       if (!response.ok) {
         throw new Error(`Mạng kết nối máy chủ không thành công (HTTP ${response.status})`);
