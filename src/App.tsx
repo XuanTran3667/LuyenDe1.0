@@ -112,23 +112,7 @@ export default function App() {
     }
   };
 
-  // Profile updating
-  const handleUpdateProfile = async (updatedData: Partial<UserProfile>) => {
-    try {
-      // Bỏ đoạn fetch('/api/profile') gây lỗi 404/405 đi
-      // Cập nhật thẳng vào giao diện local
-      setProfile(prev => {
-        if (!prev) return prev;
-        const newProfile = { ...prev, ...updatedData };
-        return newProfile;
-      });
-      return true;
-    } catch (err: any) {
-      console.error('Failed to update profile locally', err);
-      return false;
-    }
-  };
-    } catch (e: any) {
+     } catch (e: any) {
       console.error('[NETWORK ERROR] Profile updating failed on server. Saving update locally on client-only state.', e);
       // Fallback local updates
       setProfile(prev => ({
