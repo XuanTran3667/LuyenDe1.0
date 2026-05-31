@@ -112,19 +112,7 @@ export default function App() {
     }
   };
 
-     } catch (e: any) {
-      console.error('[NETWORK ERROR] Profile updating failed on server. Saving update locally on client-only state.', e);
-      // Fallback local updates
-      setProfile(prev => ({
-        ...prev,
-        ...updatedData
-      }));
-      return true;
-    }
-    return false;
-  };
-
-  const handleDeleteExamAdmin = async (examId: string) => {
+    const handleDeleteExamAdmin = async (examId: string) => {
     try {
       const res = await fetch(`/exams/${examId}`, {
         method: 'DELETE'
