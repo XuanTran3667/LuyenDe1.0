@@ -48,37 +48,11 @@ export default function App() {
   }, []);
 
   const fetchExams = async () => {
-    try {
-      const res = await fetch('/api/exams');
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
-      const json = await res.json();
-      if (json && json.success) {
-        setExams(json.data);
-      } else {
-        throw new Error('API reported failure or invalid format');
-      }
-    } catch (e: any) {
-      console.warn('[NETWORK WARNING] Backend exams fetch offline/error. Using local high-fidelity mock data fallback.', e.message || e);
-    }
+    console.warn('[LOCAL MODE] Loading mock exams data automatically.');
   };
 
   const fetchProfile = async () => {
-    try {
-      const res = await fetch('/api/profile');
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
-      const json = await res.json();
-      if (json && json.success) {
-        setProfile(json.data);
-      } else {
-        throw new Error('API reported failure');
-      }
-    } catch (e: any) {
-      console.warn('[NETWORK WARNING] Backend profile fetch offline/error. Fallback client-only active profile is fully locked & activated.', e.message || e);
-    }
+    console.warn('[LOCAL MODE] Profile loaded from client state.');
   };
 
   // Launching exam module triggers
@@ -94,40 +68,32 @@ export default function App() {
   // Submitting test results
   const handleSubmitQuizResult = async (attemptData: Omit<ExamAttempt, 'id' | 'createdAt'>) => {
     try {
-      const res = await fetch('/api/attempts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(attemptData)
-      });
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
-      const json = await res.json();
-      if (json && json.success) {
-        setProfile(json.activeUser);
-        setActiveAttempt(json.attempt);
-        setActiveTab('result');
-      } else {
-        throw new Error('API failed to process answers successfully');
-      }
-    } catch (err: any) {
-      console.error('[NETWORK ERROR] Failed to submit attempt result to backend. Activating client-side mock commit logic.', err);
-      // Client-side fallback computation
+      // Giữ lại logic tạo kết quả cục bộ (giống như đoạn mock ở hình đầu tiên của bạn)
       const localAttempt: ExamAttempt = {
         ...attemptData,
         id: `attempt-local-${Date.now()}`,
         createdAt: new Date().toISOString()
       };
       
-      const newHistory = [...(profile.history || []), localAttempt];
-      const updatedProfile: UserProfile = {
-        ...profile,
-        history: newHistory,
-        streak: profile.streak + 1,
-        lastActiveDate: new Date().toISOString().split('T')[0]
-      };
+      // Cập nhật thẳng vào lịch sử trên giao diện
+      setProfile(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          history: [...(prev.history || []), localAttempt],
+          streak: prev.streak + 1,
+          lastActiveDate: new Date().toISOString().split('T')[0]
+        };
+      });
+
+      setActiveAttempt(localAttempt);
+      setActiveTab('result');
+      return true;
+    } catch (err: any) {
+      console.error('Failed to save attempt locally:', err);
+      return false;
+    }
+  };
       
       setProfile(updatedProfile);
       setActiveAttempt(localAttempt);
@@ -138,21 +104,19 @@ export default function App() {
   // Profile updating
   const handleUpdateProfile = async (updatedData: Partial<UserProfile>) => {
     try {
-      const res = await fetch('/api/profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updatedData)
+      // Bỏ đoạn fetch('/api/profile') gây lỗi 404/405 đi
+      // Cập nhật thẳng vào giao diện local
+      setProfile(prev => {
+        if (!prev) return prev;
+        const newProfile = { ...prev, ...updatedData };
+        return newProfile;
       });
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
-      const json = await res.json();
-      if (json && json.success) {
-        setProfile(json.data);
-        return true;
-      }
+      return true;
+    } catch (err: any) {
+      console.error('Failed to update profile locally', err);
+      return false;
+    }
+  };
     } catch (e: any) {
       console.error('[NETWORK ERROR] Profile updating failed on server. Saving update locally on client-only state.', e);
       // Fallback local updates
@@ -165,53 +129,9 @@ export default function App() {
     return false;
   };
 
-  // Admin adding new exam template
-  const handleAddExamAdmin = async (newExamForm: any) => {
-    try {
-      const res = await fetch('/api/exams', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newExamForm)
-      });
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
-      }
-      const json = await res.json();
-      if (json && json.success) {
-        await fetchExams(); // pull updated lists immediately
-        return true;
-      }
-    } catch (e: any) {
-      console.error('[NETWORK ERROR] Failed to register exam on server. Committing to client-only exams store.', e);
-      // Admin manual local commit fallback
-      const localNewExam: Exam = {
-        id: `exam-local-${Date.now()}`,
-        title: newExamForm.title,
-        year: newExamForm.year || 2026,
-        subject: newExamForm.subject,
-        difficulty: newExamForm.difficulty || 'Trung bình',
-        duration: newExamForm.duration || 50,
-        questions: (newExamForm.questions || []).map((q: any, idx: number) => ({
-          ...q,
-          id: `q-local-${Date.now()}-${idx}`,
-          order: idx + 1
-        })),
-        tags: newExamForm.tags || [newExamForm.subject, 'Luyện thi THPT 2026'],
-        attemptCount: 0,
-        createdAt: new Date().toISOString()
-      };
-      setExams(prev => [localNewExam, ...prev]);
-      return true;
-    }
-    return false;
-  };
-
-  // Admin deleting exam
   const handleDeleteExamAdmin = async (examId: string) => {
     try {
-      const res = await fetch(`/api/exams/${examId}`, {
+      const res = await fetch(`/exams/${examId}`, {
         method: 'DELETE'
       });
       if (!res.ok) {
