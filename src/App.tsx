@@ -89,13 +89,7 @@ export default function App() {
       setActiveAttempt(localAttempt);
       setActiveTab('result');
       return true;
-    } catch (err: any) {
-      console.error('Failed to save attempt locally:', err);
-      return false;
-    }
-  };
-      
-     } catch (err: any) {
+  } catch (err: any) {
       console.error('Failed to save attempt locally:', err);
       return false;
     }
